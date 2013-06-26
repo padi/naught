@@ -38,11 +38,18 @@ module Naught
       respond_to_any_message unless interface_defined?
       generation_mod    = Module.new
       customization_mod = customization_module # get a local binding
-      builder           = self
 
       apply_operations(operations, generation_mod)
+      null_class = initialize_base_class(generation_mod, customization_mod)
+      apply_operations(class_operations, null_class)
 
-      null_class = Class.new(@base_class) do
+      null_class
+    end
+
+    def initialize_base_class(generation_mod, customization_mod)
+      builder = self
+
+      Class.new(@base_class) do
         const_set :GeneratedMethods, generation_mod
         const_set :Customizations, customization_mod
         const_set :NULL_EQUIVS, builder.null_equivalents
@@ -57,10 +64,6 @@ module Naught
         include generation_mod
         include customization_mod
       end
-
-      apply_operations(class_operations, null_class)
-
-      null_class
     end
 
     def method_missing(method_name, *args, &block)
