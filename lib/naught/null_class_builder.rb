@@ -1,5 +1,6 @@
 require 'naught/basic_object'
 require 'naught/conversions'
+require 'naught/base_class_initializer'
 
 module Naught
   class NullClassBuilder
@@ -47,23 +48,7 @@ module Naught
     end
 
     def initialize_base_class(generation_mod, customization_mod)
-      builder = self
-
-      Class.new(@base_class) do
-        const_set :GeneratedMethods, generation_mod
-        const_set :Customizations, customization_mod
-        const_set :NULL_EQUIVS, builder.null_equivalents
-        include Conversions
-        remove_const :NULL_EQUIVS
-        Conversions.instance_methods.each do |instance_method|
-          undef_method(instance_method)
-        end
-        const_set :Conversions, Conversions
-
-        include NullObjectTag
-        include generation_mod
-        include customization_mod
-      end
+      BaseClassInitializer.new(self).execute(generation_mod, customization_mod)
     end
 
     def method_missing(method_name, *args, &block)
